@@ -1,0 +1,41 @@
+services:
+  # ── Backend: Flask API ───────────────────────────────────────────────────────
+  - type: web
+    name: collabwork-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn run:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: FLASK_ENV
+        value: production
+      - key: JWT_ACCESS_MINUTES
+        value: 60
+      - key: JWT_REFRESH_DAYS
+        value: 30
+    disk:
+      name: sqlite-data
+      mountPath: /opt/render/project/src/instance
+      sizeGB: 1
+
+  # ── Frontend: React Static Site ──────────────────────────────────────────────
+  - type: web
+    name: collabwork-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: collabwork-backend
+          type: web
+          property: host
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:5000/api',
+  baseURL: import.meta.env.VITE_API_URL
+    ? `https://${import.meta.env.VITE_API_URL}/api`
+    : '/api',
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -12,7 +14,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// On 401 — clear token and fire global logout event (FIX #13 & #14)
+// On 401 — clear token and fire global logout event
 api.interceptors.response.use(
   (res) => res,
   (error) => {
